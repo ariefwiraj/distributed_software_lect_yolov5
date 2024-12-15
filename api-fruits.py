@@ -15,7 +15,7 @@ if not os.path.exists(MODEL_PATH):
 model = torch.hub.load('ultralytics/yolov5', 'custom', path=MODEL_PATH)
 
 # Daftar kelas target (buah)
-TARGET_CLASSES = ['apple', 'banana', 'orange', 'grape', 'pineapple']  # Sesuaikan dengan kelas yang ada pada model Anda
+TARGET_CLASSES = ['apple', 'banana', 'orange']  # Sesuaikan dengan kelas yang ada pada model Anda
 
 @app.route('/')
 def home():
