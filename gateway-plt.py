@@ -9,63 +9,11 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 # Endpoint API deteksi objek
-FRUIT_DETECTION_URL = "http://192.168.1.8:5000/detect"
+FRUIT_DETECTION_URL = "http://127.0.0.1:5006/detect"
 VEHICLE_DETECTION_URL = "http://192.168.1.6:5002/detect"
 ELEKTRONIK_DETECTION_URL = "http://192.168.1.8:5003/detect"
 WAJAH_DETECTION_URL = "https://8ec2-180-252-174-27.ngrok-free.app/predict"
 
-# Halaman HTML dalam string
-HTML_PAGE = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Gateway Endpoint</title>
-</head>
-<body>
-    <h1>Test Gateway Endpoint</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <label for="image">Upload an image:</label><br>
-        <input type="file" id="image" name="image" accept="image/*" required><br><br>
-        <button type="button" onclick="sendRequest()">Submit</button>
-    </form>
-
-    <h2>Response:</h2>
-    <pre id="response">Response will appear here</pre>
-
-    <script>
-        async function sendRequest() {
-            const form = document.getElementById('uploadForm');
-            const formData = new FormData(form);
-
-            const responseElement = document.getElementById('response');
-            responseElement.textContent = 'Sending request...';
-
-            try {
-                const response = await fetch('/gateway', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const result = await response.json();
-                responseElement.textContent = JSON.stringify(result, null, 2);
-            } catch (error) {
-                responseElement.textContent = `Error: ${error.message}`;
-            }
-        }
-    </script>
-</body>
-</html>
-"""
-
-@app.route('/')
-def home():
-    return render_template_string(HTML_PAGE)
 
 @app.route('/gateway', methods=['POST'])
 def gateway():
