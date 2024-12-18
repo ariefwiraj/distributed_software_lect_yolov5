@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Detection API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        .result {
+            margin-top: 20px;
+        }
+
+        .json-output {
+            white-space: pre-wrap;
+            background: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .button-container {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>API DETECTION</h1>
+
+    <!-- First Image Upload Form (Detect) -->
+    <h2>Upload Image for Fruits Detection API</h2>
+    <form id="uploadFormDetect" enctype="multipart/form-data">
+        <label for="imageDetect">Upload an image:</label>
+        <input type="file" id="imageDetect" name="image" accept="image/*" required>
+        <div class="button-container">
+            <button type="submit">Detect</button>
+        </div>
+    </form>
+
+    <div class="result">
+        <h3>Fruits Detection API Results (JSON):</h3>
+        <button id="toggleJsonDetectButton" class="hidden">Hide JSON</button>
+        <div id="jsonOutputDetect" class="json-output hidden"></div>
+    </div>
+
+    <div>
+        <h3>Fruits Detection API Output Image with Bounding Box:</h3>
+        <button id="toggleButtonDetect" class="hidden">Show Image</button>
+        <img id="outputImageDetect" class="hidden" alt="Upload an image to see results">
+    </div>
+
+    <div style="margin-bottom: 60px;"></div>
+
+
+    <!-- Second Image Upload Form (Gateway) -->
+    <h2>Upload Image for Gateway API</h2>
+    <form id="uploadFormGateway" enctype="multipart/form-data">
+        <label for="imageGateway">Upload an image:</label>
+        <input type="file" id="imageGateway" name="image" accept="image/*" required>
+        <div class="button-container">
+            <button type="submit">Detect</button>
+        </div>
+    </form>
+
+    <div class="result">
+        <h3>Gateway API Results (JSON):</h3>
+        <button id="toggleJsonGatewayButton" class="hidden">Hide JSON</button>
+        <div id="jsonOutputGateway" class="json-output hidden"></div>
+    </div>
+
+    <div class="error" id="errorOutput"></div>
+
+    <script>
+        // Detect API form submission
+        document.getElementById('uploadFormDetect').addEventListener('submit', async function (event) {
+            event.preventDefault();
+    
+            const imageInput = document.getElementById('imageDetect');
+            const errorOutput = document.getElementById('errorOutput');
+            const jsonOutput = document.getElementById('jsonOutputDetect');
+            const outputImage = document.getElementById('outputImageDetect');
+            const toggleButton = document.getElementById('toggleButtonDetect');
+            const toggleJsonButton = document.getElementById('toggleJsonDetectButton');
+    
+            // Reset previous results and errors
+            errorOutput.textContent = '';
+            jsonOutput.textContent = '';
+            jsonOutput.classList.add('hidden');
+            toggleJsonButton.classList.add('hidden');
+            outputImage.src = '';
+            outputImage.classList.add('hidden');
+            toggleButton.classList.add('hidden');
+    
+            // Validate if an image is selected
+            if (!imageInput.files.length) {
+                errorOutput.textContent = "Please upload an image.";
+                return;
+            }
+    
+            const formData = new FormData();
+            formData.append('image', imageInput.files[0]);
+    
+            try {
+                // Step 1: Fetch Detect API JSON results
+                const jsonResponse = await fetch('http://127.0.0.1:5007/detect', {
+                    method: 'POST',
+                    body: formData
+                });
+    
+                if (!jsonResponse.ok) {
+                    throw new Error("Failed to fetch JSON response.");
+                }
+    
+                const jsonData = await jsonResponse.json();
+                jsonOutput.textContent = JSON.stringify(jsonData, null, 2);
+                jsonOutput.classList.remove('hidden');
+                toggleJsonButton.classList.remove('hidden');
+                toggleJsonButton.textContent = 'Hide JSON';
+    
+                // Step 2: Fetch output image with bounding boxes
+                const imageResponse = await fetch('http://127.0.0.1:5007/detection', {
+                    method: 'POST',
+                    body: formData
+                });
+    
+                if (!imageResponse.ok) {
+                    throw new Error("Failed to fetch output image.");
+                }
+    
+                const imageBlob = await imageResponse.blob();
+                const imageUrl = URL.createObjectURL(imageBlob);
+                outputImage.src = imageUrl;
+                outputImage.classList.remove('hidden');
+                toggleButton.classList.remove('hidden');
+                toggleButton.textContent = 'Hide Image';
+            } catch (error) {
+                errorOutput.textContent = `An error occurred: ${error.message}`;
+                console.error("Error:", error);
+            }
+        });
+    
+        // Toggle Image visibility
+        document.getElementById('toggleButtonDetect').addEventListener('click', function () {
+            const outputImage = document.getElementById('outputImageDetect');
+            const toggleButton = document.getElementById('toggleButtonDetect');
+    
+            if (outputImage.classList.contains('hidden')) {
+                outputImage.classList.remove('hidden');
+                toggleButton.textContent = 'Hide Image';
+            } else {
+                outputImage.classList.add('hidden');
+                toggleButton.textContent = 'Show Image';
+            }
+        });
+    
+        // Toggle JSON visibility
+        function toggleJsonVisibility(jsonOutput, toggleJsonButton) {
+            if (jsonOutput.classList.contains('hidden')) {
+                jsonOutput.classList.remove('hidden');
+                toggleJsonButton.textContent = 'Hide JSON';
+            } else {
+                jsonOutput.classList.add('hidden');
+                toggleJsonButton.textContent = 'Show JSON';
+            }
+        }
+    
+        // Add event listeners for toggle buttons
+        document.getElementById('toggleJsonDetectButton').addEventListener('click', function () {
+            toggleJsonVisibility(document.getElementById('jsonOutputDetect'), document.getElementById('toggleJsonDetectButton'));
+        });
+    
+        document.getElementById('toggleJsonGatewayButton').addEventListener('click', function () {
+            toggleJsonVisibility(document.getElementById('jsonOutputGateway'), document.getElementById('toggleJsonGatewayButton'));
+        });
+    </script>
+</body>
+</html>
